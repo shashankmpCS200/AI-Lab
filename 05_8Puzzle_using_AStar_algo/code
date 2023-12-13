@@ -1,0 +1,90 @@
+import heapq
+
+def get_blank_position(state):
+    for i in range(3):
+        for j in range(3):
+            if state[i][j] == 0:
+                return i, j
+
+def manhattan_distance(state):
+    distance = 0
+    for i in range(3):
+        for j in range(3):
+            if state[i][j] != 0:
+                goal_row, goal_col = divmod(state[i][j] - 1, 3)
+                distance += abs(i - goal_row) + abs(j - goal_col)
+    return distance
+
+def actions(state):
+    i, j = get_blank_position(state)
+    possible_actions = []
+
+    if i > 0:
+        possible_actions.append("up")
+    if i < 2:
+        possible_actions.append("down")
+    if j > 0:
+        possible_actions.append("left")
+    if j < 2:
+        possible_actions.append("right")
+
+    return possible_actions
+
+def apply_action(state, action):
+    i, j = get_blank_position(state)
+
+    if action == "up":
+        state[i][j], state[i - 1][j] = state[i - 1][j], state[i][j]
+    elif action == "down":
+        state[i][j], state[i + 1][j] = state[i + 1][j], state[i][j]
+    elif action == "left":
+        state[i][j], state[i][j - 1] = state[i][j - 1], state[i][j]
+    elif action == "right":
+        state[i][j], state[i][j + 1] = state[i][j + 1], state[i][j]
+
+    return state
+
+def goal_test(state):
+    goal_state = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
+    return state == goal_state
+
+def a_star_search(initial_state):
+    priority_queue = []
+    heapq.heappush(priority_queue, (manhattan_distance(initial_state), initial_state, []))
+
+    visited_states = set()
+
+    while priority_queue:
+        _, current_state, path = heapq.heappop(priority_queue)
+
+        if goal_test(current_state):
+            return path + [current_state]
+
+        visited_states.add(tuple(map(tuple, current_state)))
+
+        for action in actions(current_state):
+            child_state = [row[:] for row in current_state]
+            child_state = apply_action(child_state, action)
+
+            if tuple(map(tuple, child_state)) not in visited_states:
+                heapq.heappush(priority_queue, (manhattan_distance(child_state) + len(path), child_state, path + [current_state]))
+
+    return None
+
+def print_solution(solution_path):
+    for state in solution_path:
+        print_state(state)
+        print()
+
+def print_state(state):
+    for row in state:
+        print(" ".join(map(str, row)))
+
+if __name__ == "__main__":
+    initial_state = [[2, 8, 3], [1, 6, 4], [7, 0, 5]]
+    solution_path = a_star_search(initial_state)
+    
+    if solution_path:
+        print_solution(solution_path)
+    else:
+        print("No solution found.")

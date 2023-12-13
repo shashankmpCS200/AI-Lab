@@ -1,0 +1,108 @@
+class PuzzleNode:
+    def __init__(self, state, parent=None, action=None):
+        self.state = state
+        self.parent = parent
+        self.action = action
+
+    def __eq__(self, other):
+        return self.state == other.state
+
+    def __hash__(self):
+        return hash(str(self.state))
+
+
+def get_blank_position(state):
+    for i in range(3):
+        for j in range(3):
+            if state[i][j] == 0:
+                return i, j
+
+
+def actions(node):
+    i, j = get_blank_position(node.state)
+    possible_actions = []
+
+    if i > 0:
+        possible_actions.append("up")
+    if i < 2:
+        possible_actions.append("down")
+    if j > 0:
+        possible_actions.append("left")
+    if j < 2:
+        possible_actions.append("right")
+
+    return possible_actions
+
+
+def apply_action(state, action):
+    i, j = get_blank_position(state)
+
+    if action == "up":
+        state[i][j], state[i - 1][j] = state[i - 1][j], state[i][j]
+    elif action == "down":
+        state[i][j], state[i + 1][j] = state[i + 1][j], state[i][j]
+    elif action == "left":
+        state[i][j], state[i][j - 1] = state[i][j - 1], state[i][j]
+    elif action == "right":
+        state[i][j], state[i][j + 1] = state[i][j + 1], state[i][j]
+
+    return state
+
+
+def goal_test(state):
+    goal_state = [[1, 2, 3], [8, 0, 4], [7, 6, 5]]
+    return state == goal_state
+
+
+def depth_limited_search(node, depth_limit):
+    if depth_limit == 0:
+        return None
+    if goal_test(node.state):
+        return node
+
+    for action in actions(node):
+        child_state = [row[:] for row in node.state]
+        child_state = apply_action(child_state, action)
+        child_node = PuzzleNode(state=child_state, parent=node, action=act ion)
+
+        result = depth_limited_search(child_node, depth_limit - 1)
+
+        if result is not None:
+            return result
+
+    return None
+
+
+def iterative_deepening_search(initial_state):
+    initial_node = PuzzleNode(state=initial_state)
+    depth_limit = 0
+
+    while True:
+        result = depth_limited_search(initial_node, depth_limit)
+
+        if result is not None:
+            return result
+        else:
+            depth_limit += 1
+
+
+def print_solution(solution_node):
+    solution_path = []
+    while solution_node is not None:
+        solution_path.append(solution_node.state)
+        solution_node = solution_node.parent
+
+    for state in reversed(solution_path):
+        print_state(state)
+        print()
+
+
+def print_state(state):
+    for row in state:
+        print(row)
+
+
+if __name__ == "__main__":
+    initial_state = [[2, 8, 3], [1, 6, 4], [7, 0, 5]]
+    solution_node = iterative_deepening_search(initial_state)
+    print_solution(solution_node)
